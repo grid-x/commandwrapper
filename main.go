@@ -39,14 +39,20 @@ func main() {
 		var stdoutBuf, stderrBuf bytes.Buffer
 		cmd := exec.Command(cmdName, cmdArgs...)
 
-		stdoutIn, _ := cmd.StdoutPipe()
-		stderrIn, _ := cmd.StderrPipe()
+		stdoutIn, err := cmd.StdoutPipe()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Failed to create StdoutPipe: ", err)
+		}
+		stderrIn, err := cmd.StderrPipe()
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Failed to create StderrPipe: ", err)
+		}
 
 		var errStdout, errStderr error
 		stdout := io.MultiWriter(os.Stdout, &stdoutBuf)
 		stderr := io.MultiWriter(os.Stderr, &stderrBuf)
-		err := cmd.Start()
-		if err != nil {
+
+		if err := cmd.Start(); err != nil {
 			fmt.Fprintln(os.Stderr, "Failed to start the command: ", err)
 		}
 
@@ -58,8 +64,7 @@ func main() {
 			_, errStderr = io.Copy(stderr, stderrIn)
 		}()
 
-		err = cmd.Wait()
-		if err != nil {
+		if err := cmd.Wait(); err != nil {
 			fmt.Fprintln(os.Stderr, "Command failed: ", err)
 		}
 		if errStdout != nil || errStderr != nil {
