@@ -8,12 +8,13 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 )
 
 type arrayFlags []string
 
 func (i *arrayFlags) String() string {
-	return "string representation "
+	return fmt.Sprintf("%s", *i)
 }
 
 func (i *arrayFlags) Set(value string) error {
@@ -24,6 +25,7 @@ func (i *arrayFlags) Set(value string) error {
 var myFlags arrayFlags
 
 func main() {
+	var wg sync.WaitGroup
 	flag.Var(&myFlags, "execute", "eg. -execute='/usr/local/bin/mybin test123 -o -a' -execute='ls -l'")
 	flag.Parse()
 
@@ -42,10 +44,12 @@ func main() {
 		stdoutIn, err := cmd.StdoutPipe()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Failed to create StdoutPipe: ", err)
+			os.Exit(1)
 		}
 		stderrIn, err := cmd.StderrPipe()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Failed to create StderrPipe: ", err)
+			os.Exit(1)
 		}
 
 		var errStdout, errStderr error
@@ -54,21 +58,28 @@ func main() {
 
 		if err := cmd.Start(); err != nil {
 			fmt.Fprintln(os.Stderr, "Failed to start the command: ", err)
+			os.Exit(1)
 		}
 
+		wg.Add(2)
 		go func() {
 			_, errStdout = io.Copy(stdout, stdoutIn)
+			defer wg.Done()
 		}()
 
 		go func() {
 			_, errStderr = io.Copy(stderr, stderrIn)
+			defer wg.Done()
 		}()
 
 		if err := cmd.Wait(); err != nil {
 			fmt.Fprintln(os.Stderr, "Command failed: ", err)
+			os.Exit(1)
 		}
 		if errStdout != nil || errStderr != nil {
 			fmt.Fprintln(os.Stderr, "Failed to capture stdout or stderr", err)
+			os.Exit(1)
 		}
 	}
+	wg.Wait()
 }
