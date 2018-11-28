@@ -19,18 +19,21 @@ func (i *arrayFlags) Set(value string) error {
 	return nil
 }
 
-var myFlags arrayFlags
+var executions arrayFlags
+var stopOnFailure bool
 
 func main() {
-	flag.Var(&myFlags, "execute", "eg. -execute='/usr/local/bin/mybin test123 -o -a' -execute='ls -l'")
+	flag.Var(&executions, "execute", "eg. -execute='/usr/local/bin/mybin test123 -o -a' -execute='ls -l'")
+	flag.BoolVar(&stopOnFailure, "stop-on-failure", false, "Should multiple execute steps combined with && or ||")
 	flag.Parse()
 
-	if len(myFlags) == 0 {
+	if len(executions) == 0 {
 		fmt.Print("No commands found")
 		os.Exit(1)
 	}
 
-	for _, element := range myFlags {
+	exitcode := 0
+	for _, element := range executions {
 		s := strings.Split(element, " ")
 		cmdName, cmdArgs := s[0], s[1:]
 
@@ -39,7 +42,11 @@ func main() {
 
 		if err := cmd.Run(); err != nil {
 			fmt.Fprintln(os.Stderr, "Command failed: ", err)
-			os.Exit(1)
+			exitcode = 1
+			if stopOnFailure {
+				break
+			}
 		}
 	}
+	os.Exit(exitcode)
 }
