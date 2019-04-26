@@ -26,3 +26,8 @@ As we do not want to include a shell in our scratch containers we're using this 
 -execute="/usr/local/bin/envscan -server-address=device-api.gridx.de:80....." \
 -execute="/usr/local/bin/monitoring -server-address=device-api.gridx.de:80....."
 ```
+
+Commands can also be chained more precisely using the ```stop-on-failure=true/false``` flag.
+
+## Signal handling
+The commandwrapper is forwarding any signal to the running process. in the case of ```SIGTERM``` and ```SIGINT``` the complete process chain will be terminated, no matter if ```stop-on-failure``` is set. To just terminate the currently running process and go on with the chain if ```stop-on-failure=false``` is set, use the ```SIGHUB``` signal.

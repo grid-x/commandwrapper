@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
 	"syscall"
 )
@@ -44,29 +45,46 @@ func runAllCommands(executions executionsArray, stopOnFailure bool) int {
 		s := strings.Split(element, " ")
 		cmdName, cmdArgs := s[0], s[1:]
 
-		exitcode = executeCommand(cmdName, cmdArgs)
+		var quit bool
+		exitcode, quit = executeCommand(cmdName, cmdArgs)
 
-		if stopOnFailure && exitcode != 0 {
+		if quit || (stopOnFailure && exitcode != 0) {
 			break
 		}
 	}
 	return exitcode
 }
 
-func executeCommand(cmdName string, cmdArgs []string) int {
+func executeCommand(cmdName string, cmdArgs []string) (int, bool) {
 	cmd := exec.Command(cmdName, cmdArgs...)
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+
+	// Receive all signals and forward them to the process
+	signalC := make(chan os.Signal)
+	defer close(signalC)
+	signal.Notify(signalC)
+	defer signal.Stop(signalC)
+
+	quit := false
+	go func() {
+		s := <-signalC
+		if s == syscall.SIGTERM || s == syscall.SIGINT {
+			quit = true
+		}
+
+		cmd.Process.Signal(s)
+	}()
 
 	if err := cmd.Run(); err != nil {
 		fmt.Fprintln(os.Stderr, "Command failed: ", err)
 
 		if exitError, ok := err.(*exec.ExitError); ok {
 			ws := exitError.Sys().(syscall.WaitStatus)
-			return ws.ExitStatus()
+			return ws.ExitStatus(), quit
 		}
 
 		fmt.Fprintln(os.Stderr, "Could not get exit code for failed program")
-		return 1
+		return 1, quit
 	}
-	return 0
+	return 0, quit
 }
