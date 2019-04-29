@@ -17,7 +17,7 @@ func TestSuccessfulExecute(t *testing.T) {
 }
 
 func TestFailedExecute(t *testing.T) {
-	cmdName := "./fail_with_56.sh"
+	cmdName := "test_scripts/fail_with_56.sh"
 	cmdArgs := []string{}
 	returncode, _ := executeCommand(cmdName, cmdArgs)
 
@@ -36,7 +36,7 @@ func TestMultipleExecute(t *testing.T) {
 }
 
 func TestMultipleExecuteAndDontStopOnFailure(t *testing.T) {
-	executions := []string{"./fail_with_56.sh", "true"}
+	executions := []string{"test_scripts/fail_with_56.sh", "true"}
 	returncode := runAllCommands(executions, false)
 
 	if returncode != 0 {
@@ -45,7 +45,7 @@ func TestMultipleExecuteAndDontStopOnFailure(t *testing.T) {
 }
 
 func TestMultipleExecuteAndStopOnFailure(t *testing.T) {
-	executions := []string{"./fail_with_56.sh", "true"}
+	executions := []string{"test_scripts/fail_with_56.sh", "true"}
 	returncode := runAllCommands(executions, true)
 	if returncode != 56 {
 		t.Errorf("Returncode was incorrect, got: %d, want: %d.", returncode, 56)
@@ -56,11 +56,11 @@ func TestSIGTERMHandling(t *testing.T) {
 	go func() {
 		time.Sleep(2 * time.Second)
 
-		cmd := exec.Command("/bin/bash", "./sigterm_commandwrapper.sh")
+		cmd := exec.Command("/bin/bash", "test_scripts/sigterm_commandwrapper.sh")
 		cmd.Run()
 	}()
 
-	cmdName := "./endless.sh"
+	cmdName := "test_scripts/endless.sh"
 	cmdArgs := []string{}
 	returncode, sigterm := executeCommand(cmdName, cmdArgs)
 
@@ -76,11 +76,11 @@ func TestSignalHandlingWithMultilple(t *testing.T) {
 	go func() {
 		time.Sleep(2 * time.Second)
 
-		cmd := exec.Command("/bin/bash", "./sigterm_commandwrapper.sh")
+		cmd := exec.Command("/bin/bash", "test_scripts/sigterm_commandwrapper.sh")
 		cmd.Run()
 	}()
 
-	executions := []string{"./endless.sh", "true"}
+	executions := []string{"test_scripts/endless.sh", "true"}
 	returncode := runAllCommands(executions, false)
 
 	if returncode != -1 {
