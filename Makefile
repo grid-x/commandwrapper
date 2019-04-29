@@ -11,8 +11,8 @@ lint:
 	${DOCKER_RUN} ${GO_TOOLS} bash -c "export GOPATH=/go && golint ${GO_FILES}"
 
 test:
-	${DOCKER_RUN} ${GO_TOOLS} bash -c "${CI_DEPS} && export GOPATH=/go && go test"
+	${DOCKER_RUN} ${GO_TOOLS} bash -c "${CI_DEPS} && export GOPATH=/go && go test -coverprofile cover.out"
 
 # Build bin to debug on amd64
-bin/commandwrapper: 
+build: 
 	${DOCKER_RUN} ${GO_TOOLS} bash -c "export GOPATH=/go && CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags=\"-w -s\" -o ${BUNDLE}/commandwrapper"

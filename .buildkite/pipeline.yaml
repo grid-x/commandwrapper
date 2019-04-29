@@ -9,3 +9,8 @@ steps:
   label: ":llama: Test"
   agents:
   - "queue=default"
+- command:
+  - "make build"
+  label: ":llama: Build"
+  agents:
+  - "queue=default"
