@@ -1,0 +1,16 @@
+steps:
+- command:
+  - "make lint"
+  label: ":llama: Lint"
+  agents:
+  - "queue=default"
+- command:
+  - "make test"
+  label: ":llama: Test"
+  agents:
+  - "queue=default"
+- command:
+  - "make build"
+  label: ":llama: Build"
+  agents:
+  - "queue=default"

@@ -21,16 +21,16 @@ func (i *executionsArray) Set(value string) error {
 	return nil
 }
 
-var executions executionsArray
-var stopOnFailure bool
-
 func main() {
+	var stopOnFailure bool
+	var executions executionsArray
+
 	flag.Var(&executions, "execute", "eg. -execute='/usr/local/bin/mybin test123 -o -a' -execute='ls -l'")
 	flag.BoolVar(&stopOnFailure, "stop-on-failure", false, "If true, multiple execute steps get combined with && otherwise ||")
 	flag.Parse()
 
 	if len(executions) == 0 {
-		fmt.Print("No commands found")
+		fmt.Fprintln(os.Stderr, "No commands found")
 		os.Exit(1)
 	}
 
